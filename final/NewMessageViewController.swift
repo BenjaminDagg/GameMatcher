@@ -38,7 +38,7 @@ class NewMessageViewController: UIViewController, UIPickerViewDelegate, UIPicker
             self.loggedInUser = name
             DatabaseHelper.getContacts(username: name){ contactlist in
                 if contactlist.count > 0 {
-                    self.Contacts = ["Chose a contact"]
+                    self.Contacts = ["Choose a contact"]
                     self.Contacts.append(contentsOf: contactlist)
                 }
             }
@@ -58,7 +58,12 @@ class NewMessageViewController: UIViewController, UIPickerViewDelegate, UIPicker
     }
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        recipientField.text = Contacts[row]
+        if Contacts[row] == "Choose a contact" {
+            return
+        }
+        else {
+            recipientField.text = Contacts[row]
+        }
     }
 
     @IBAction func sendMessageAction(_ sender: Any) {

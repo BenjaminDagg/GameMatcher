@@ -28,6 +28,7 @@ class PostDetailViewController: UIViewController, UIScrollViewDelegate {
     @IBOutlet weak var messageTextView: UITextView!
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var scrollViewContainer: UIView!
+    @IBOutlet weak var contactBtn: UIButton!
     
     
     
@@ -52,7 +53,7 @@ class PostDetailViewController: UIViewController, UIScrollViewDelegate {
         recognizer.addTarget(self, action: #selector(showUserProfile))
         profileImg.addGestureRecognizer(recognizer)
         
-        
+        self.contactBtn.addTarget(self, action: #selector(addContact), for: .touchUpInside)
         
     }
     
@@ -267,25 +268,79 @@ class PostDetailViewController: UIViewController, UIScrollViewDelegate {
         
     }
     
-    @IBAction func addContact(_ sender: Any) {
+    func addContact(sender: UIButton) {
+        print("clicked contacts button")
+        /*
+         if let posterUsername = user?.userName{
+         let email = Auth.auth().currentUser?.email
+         print("trying to add \(email)")
+         
+         DatabaseHelper.getUsername(email: email!) { name in
+         print(name)
+         DatabaseHelper.getContacts(username: name) {contacts in
+         print(contacts)
+         print(posterUsername)
+         if name != posterUsername && !contacts.contains(posterUsername){
+         let ref = Database.database().reference()
+         let postDB = [posterUsername:self.user?.userID ?? "unknown ID"]
+         let child = ["/users/\(name)/contacts/": postDB]
+         ref.updateChildValues(child)
+         print("added to contacts")
+         }
+         }
+         }
+         */
         
-        if let posterUsername = user?.userName{
-            let email = Auth.auth().currentUser?.email
-            print("trying to add")
-            DatabaseHelper.getUsername(email: email!) { name in
-                print(name)
-                DatabaseHelper.getContacts(username: name) {contacts in
-                    print(contacts)
-                    print(posterUsername)
-                    if name != posterUsername && !contacts.contains(posterUsername){
-                        let ref = Database.database().reference()
-                        let postDB = [posterUsername:self.user?.userID ?? "unknown ID"]
-                        let child = ["/users/\(name)/contacts/": postDB]
-                        ref.updateChildValues(child)
-                        print("added to contacts")
+        guard let postUser = self.user else {
+            print("postuser was nil")
+            return
+        }
+        //get email
+        if let currentEmail = Auth.auth().currentUser?.email {
+            print("current email is \(currentEmail)")
+            //find username associated with the email
+            let ref = Database.database().reference()
+            ref.child("users").observeSingleEvent(of: .value, with: { snapshot in
+                
+                let enumerator = snapshot.children
+                while let child = enumerator.nextObject() as? DataSnapshot {
+                    if let value = child.value as? NSDictionary {
+                        if let email = value["email"] as? String {
+                            if currentEmail == email {
+                                if let username = value["username"] as? String {
+                                    if username == postUser.userName {
+                                        let alert = UIAlertController(title: "Error", message: "Cannot add yourself as a contact", preferredStyle: .alert)
+                                        alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                                        self.present(alert, animated:true,completion:nil)
+                                        return
+                                    }
+                                    else {
+                                        let testRef = Database.database().reference()
+                                        testRef.child("users").child(username).child(postUser.userName).observeSingleEvent(of: .value, with: {snapshot in
+                                            if snapshot.exists() {
+                                                let alert = UIAlertController(title: "Error", message: "Contact already exists", preferredStyle: .alert)
+                                                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                                                self.present(alert, animated:true,completion:nil)
+                                            }
+                                            else {
+                                                let ref = Database.database().reference()
+                                                let postDB = [postUser.userName:postUser.userID] as [String:Any]
+                                                let child = ["/users/\(username)/contacts/\(postUser.userName)": postDB]
+                                                ref.updateChildValues(child)
+                                                let alert = UIAlertController(title: "Success", message: "Contact added", preferredStyle: .alert)
+                                                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                                                self.present(alert, animated:true,completion:nil)
+                                            }
+                                        })
+                                    }
+                                }
+                                
+                            }
+                        }
                     }
                 }
-            }
+            })
         }
     }
+    
 }

@@ -421,7 +421,7 @@ class DatabaseHelper {
                         }
                         print("appending")
                         let timeDate = Date(timeIntervalSince1970: Double(timeSent)!/10)
-                        messages.append(Message(sender: fromUser, reciever: toUser, isSender:isSender, date: timeDate, message: messageContent))
+                        messages.append(Message(sender: fromUser, reciever: toUser, date: timeDate, message: messageContent))
                     }
                 }
                 print("messages to deliver: \(messages)")
